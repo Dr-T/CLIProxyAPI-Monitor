@@ -446,6 +446,8 @@ export default function ExplorePage() {
   
   // 堆叠面积图开关
   const [showStackedArea, setShowStackedArea] = useState(true);
+  // 散点显示开关
+  const [showScatter, setShowScatter] = useState(true);
   
   const scatterTooltipRef = useRef<ScatterTooltipHandle>(null);
 
@@ -671,14 +673,16 @@ export default function ExplorePage() {
   }, [dataBounds, zoomDomain, zoomSource, filteredPoints]);
 
   // 仅渲染可视范围内的散点，并将数量用于动画降级
+  // 当散点图开关关闭时直接返回空数组，跳过 O(N) 遍历
   const visiblePoints = useMemo(() => {
+    if (!showScatter) return [];
     if (!activeDomain) return filteredPoints;
     const [xMin, xMax] = activeDomain.x;
     const [yMin, yMax] = activeDomain.y;
     return filteredPoints.filter(p => 
       p.ts >= xMin && p.ts <= xMax && p.tokens >= yMin && p.tokens <= yMax
     );
-  }, [filteredPoints, activeDomain]);
+  }, [showScatter, filteredPoints, activeDomain]);
 
   // 使用平滑过渡的 Y 轴 domain (Lerp 动画)
   // 框选缩放时禁用动画，只有范围选择器缩放时才启用平滑过渡
@@ -1679,6 +1683,27 @@ export default function ExplorePage() {
               <button
                 type="button"
                 role="switch"
+                aria-checked={showScatter}
+                onClick={() => {
+                  if (showScatter) clearHover();
+                  setShowScatter(!showScatter);
+                }}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                  showScatter ? 'bg-blue-500' : 'bg-slate-600'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                    showScatter ? 'translate-x-4' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+              <span>散点图</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-400 hover:text-slate-300">
+              <button
+                type="button"
+                role="switch"
                 aria-checked={showStackedArea}
                 onClick={() => setShowStackedArea(!showStackedArea)}
                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
@@ -1850,18 +1875,20 @@ export default function ExplorePage() {
                     strokeWidth={1} 
                     ifOverflow="extendDomain"
                   />
-                  <Scatter 
-                    yAxisId="left" 
-                    data={visiblePoints} 
-                    shape={dotShape} 
-                    isAnimationActive={false}
-                    onMouseEnter={(entry: any, _index: number, e: React.MouseEvent) => {
-                      if (entry && 'inputTokens' in entry) {
-                        commitHover(entry as ExplorePoint, e.clientX, e.clientY);
-                      }
-                    }}
-                    onMouseLeave={clearHover}
-                  />
+                  {showScatter && (
+                    <Scatter 
+                      yAxisId="left" 
+                      data={visiblePoints} 
+                      shape={dotShape} 
+                      isAnimationActive={false}
+                      onMouseEnter={(entry: any, _index: number, e: React.MouseEvent) => {
+                        if (entry && 'inputTokens' in entry) {
+                          commitHover(entry as ExplorePoint, e.clientX, e.clientY);
+                        }
+                      }}
+                      onMouseLeave={clearHover}
+                    />
+                  )}
                 </ComposedChart>
               </ResponsiveContainer>
               

@@ -3,8 +3,10 @@
 ## 2026-03-03
 
 - Explore 页散点图渲染性能优化：
-  - 将每个数据点的双层 SVG circle（透明命中区 + 可见圆）合并为单个 circle，用 stroke 保留视觉层次和命中区，DOM 节点数量减少约 50%，万级点数下渲染压力显著降低。
-  - 引入 `useDeferredValue` 将 `filteredPoints` 分叉出延迟副本 `deferredFilteredPoints`，Y 轴直方图、X 轴时间分布、堆叠面积图三个重计算 memo 使用延迟版本，确保框选缩放、图例交互等操作不被后台 CPU 计算阻塞。
+  - 将每个数据点的双层 SVG circle（透明命中区 + 可见圆）合并为单个 circle，DOM 节点数量减少约 50%，万级点数下渲染压力显著降低。
+  - 为工具栏新增"散点图"显示开关（默认开启），关闭后 `<Scatter data={[]}>` 跳过全部散点渲染，可在只需查看堆叠面积分布时大幅降低 SVG 节点数。
+  - 引入 `deferredFilteredPoints = useDeferredValue(filteredPoints)`，Y 轴直方图、X 轴时间分布、堆叠面积图三个重计算 memo 使用延迟版本，新数据加载完毕时不阻塞主线程渲染。
+  - 为两处 `tickFormatter` 的 `v` 参数补充 `: number` 类型注解，消除 TypeScript implicit any 报错。
 
 - 首页统计卡片数值优化：
   - 平均 TPM、平均 RPM 均移除尾随零小数（`10.00` → `10`，`1.50` → `1.5`）。
