@@ -1,5 +1,5 @@
-import { sql, and, eq, gte, lte } from "drizzle-orm";
-import type { SQL } from "drizzle-orm";
+import * as DrizzleOrm from "drizzle-orm";
+const { sql, and, eq, gte, lte } = DrizzleOrm as any;
 import { db } from "@/lib/db/client";
 import { usageRecords } from "@/lib/db/schema";
 
@@ -66,10 +66,10 @@ export async function getExplorePoints(
   const since = hasCustomRange ? withDayStart(startDate!) : new Date(Date.now() - days * DAY_MS);
   const until = hasCustomRange ? withDayEnd(endDate!) : undefined;
 
-  const baseWhereParts: SQL[] = [gte(usageRecords.occurredAt, since)];
+  const baseWhereParts: any[] = [gte(usageRecords.occurredAt, since)];
   if (until) baseWhereParts.push(lte(usageRecords.occurredAt, until));
 
-  const whereParts: SQL[] = [...baseWhereParts];
+  const whereParts: any[] = [...baseWhereParts];
   if (opts?.route) whereParts.push(eq(usageRecords.route, opts.route));
   if (opts?.name) {
     whereParts.push(
@@ -89,7 +89,11 @@ export async function getExplorePoints(
     '-'
   )`;
 
-  const [totalRows, availableRouteRows, availableNameRows] = await Promise.all([
+  const [totalRows, availableRouteRows, availableNameRows]: [
+    Array<{ count: number }>,
+    Array<{ route: string }>,
+    Array<{ name: string }>
+  ] = await Promise.all([
     db
       .select({ count: sql<number>`count(*)` })
       .from(usageRecords)
@@ -123,7 +127,7 @@ export async function getExplorePoints(
   const step = total > maxPoints ? Math.ceil(total / maxPoints) : 1;
 
   // Use row_number() sampling for stable, time-ordered down-sampling.
-  const points = await db
+  const points: Array<{ ts: number; tokens: number; inputTokens: number; outputTokens: number; reasoningTokens: number; cachedTokens: number; model: string }> = await db
     .select({
       ts: sql<number>`(extract(epoch from sampled.occurred_at) * 1000)::bigint`,
       tokens: sql<number>`sampled.total_tokens`,

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { inArray, desc } from "drizzle-orm";
+import * as nextHeaders from "next/headers";
+import * as DrizzleOrm from "drizzle-orm";
 import { config } from "@/lib/config";
 import { db } from "@/lib/db/client";
 import { modelPrices, usageRecords } from "@/lib/db/schema";
+
+const { inArray, desc } = DrizzleOrm as any;
 
 export const runtime = "nodejs";
 
@@ -39,7 +41,7 @@ async function isAuthorized(request: Request) {
   
   // 检查用户的 dashboard cookie（用于前端调用）
   if (PASSWORD) {
-    const cookieStore = await cookies();
+    const cookieStore = await (nextHeaders as any).cookies();
     const authCookie = cookieStore.get(COOKIE_NAME);
     if (authCookie) {
       const expectedToken = await hashPassword(PASSWORD);
@@ -248,7 +250,12 @@ export async function POST(request: Request) {
 
     // 5. 差异化更新（仅更新变化的价格）
     const modelIds = priceUpdates.map((u) => u.model);
-    const existingRows = modelIds.length
+    const existingRows: Array<{
+      model: string;
+      input: unknown;
+      cached: unknown;
+      output: unknown;
+    }> = modelIds.length
       ? await db
           .select({
             model: modelPrices.model,

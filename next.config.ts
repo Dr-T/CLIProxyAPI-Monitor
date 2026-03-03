@@ -1,6 +1,4 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+const nextConfig = {
   /* 启用 Next.js 16 实验性视图过渡支持 */
   experimental: {
     viewTransition: true,
