@@ -2,7 +2,8 @@
 
 ## 2026-03-03
 
-- 修复 Vercel 构建时 `scripts/migrate.mjs` 报 `invalid_connection_string` 的错误：将 `createPool` 改为 `createClient`，迁移脚本现使用直连（non-pooling）连接字符串，并添加显式的 `connect()`/`end()` 调用，连接字符串优先级为 `DATABASE_URL` → `POSTGRES_URL_NON_POOLING` → `POSTGRES_URL`。
+- 修复 Vercel 构建报 `invalid_connection_string` 的错误：`@vercel/postgres` 的 `createPool` 强制要求池化连接串（含 `pgbouncer=true`），而项目使用的 `DATABASE_URL` 是直连串，导致模块加载时即报错。
+  - 新增 `pg@8.19.0` 依赖，将 `lib/db/client.ts` 和 `scripts/migrate.mjs` 全部切换到 `drizzle-orm/node-postgres` + `pg`，`pg.Pool`/`pg.Client` 兼容任意直连串，不依赖 Vercel 特定基础设施。
 
 ## 2026-02-15
 

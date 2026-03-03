@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { drizzle } from "drizzle-orm/vercel-postgres";
-import { createClient } from "@vercel/postgres";
-import { migrate } from "drizzle-orm/vercel-postgres/migrator";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 
-const client = createClient({
-  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL
+const { Client } = pg;
+const client = new Client({
+  connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL,
 });
 
 const db = drizzle(client);
