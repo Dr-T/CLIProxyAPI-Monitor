@@ -57,6 +57,7 @@ const TOKEN_COLORS = {
 
 const CHART_MARGIN = { top: 8, right: 12, left: 8, bottom: 12 };
 const CHART_TOP_INSET = 4;
+const AUTO_HIDE_SCATTER_THRESHOLD = 20_000;
 
 function clamp(num: number, min: number, max: number) {
   return Math.min(Math.max(num, min), max);
@@ -1261,6 +1262,7 @@ export default function ExplorePage() {
           const pointCount = json.points?.length ?? 0;
           // 点数超过 5000 自动启用过滤无效点
           if (pointCount > 5000) setFilterInvalidPoints(true);
+          setShowScatter(pointCount <= AUTO_HIDE_SCATTER_THRESHOLD);
           setAppliedDays(json.days ?? rangeDays);
           setRouteOptions(Array.from(new Set(json.filters?.routes ?? [])));
           setNameOptions(Array.from(new Set(json.filters?.names ?? [])));
